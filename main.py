@@ -29,39 +29,73 @@ language = WebDriverWait(driver, 20).until(
 language.click()
 
 # Wait for 5 seconds just in case to load the cookie
-driver.implicitly_wait(5)
+driver.implicitly_wait(10)
 
 import time
 # Click on the cookie
 # make the while loop work for 5 minutes
 end_time = time.time() + 60 * 5
 
+check_time = time.time() + 20
+
 # list_of_prices = []
 
+# Find the cookie element
+cookie = driver.find_element(By.ID, "bigCookie")
+
 while time.time() < end_time:
-    # Find the cookie element
-    cookie = driver.find_element(By.ID, "bigCookie")
+
     # Click on it
     cookie.click()
     # Delay of 1 sec between clicks for ease of development
-    time.sleep(1)
+    # time.sleep(1)
 
-    # Create a list of prices of available items
-    list_of_prices = []
-    try:
+    if time.time() > check_time:
+
+        # Create a list of prices of available items
+        list_of_prices = []
+        # try:
         prices_available = driver.find_elements(By.CSS_SELECTOR, "div.product.unlocked.enabled div.content span.price")
         for price in prices_available:
-            if int(price.text) not in list_of_prices:
-                list_of_prices.append(int(price.text))
-    except NoSuchElementException:
-        print("no such element")
+            if int(price.text.replace(",","")) not in list_of_prices:
+                list_of_prices.append(int(price.text.replace(",","")))
+        # except NoSuchElementException:
+        #     print("no such element")
 
-    # Print the prices of available items
-    print(list_of_prices)
+        # Print the prices of available items
+        print(list_of_prices)
+
+        #TODO Every 5 seconds check what upgrades are available and buy the most expensive one
+
+        # Find the most expensive element
+
+        most_expensive = 0
+        for price in list_of_prices:
+            if price > most_expensive:
+                most_expensive = price
+        print(most_expensive)
+        # Click that element
+        for price in prices_available:
+            if int(price.text.replace(",","")) == most_expensive:
+                # Get the ID of the most important element
+                element_id = price.get_attribute("id")
+                replace_id = element_id.replace("Price", "")
+                expensive_element = driver.find_element(By.ID, replace_id)
+                try:
+                    expensive_element.click()
+                except:
+                    print("oopsie")
+
+        check_time += 18
 
 
+# After 5 minutes stop the bot and print "cookies/second"
 
+driver.implicitly_wait(5)
+find_result = driver.find_element(By.ID, "cookiesPerSecond")
+pre_result = find_result.text
+# Split on the space, grab the last element and convert to a float
+result = float(pre_result.split(" ")[-1])
+print(f"Your final result is {result} cookies per second")
 
-
-# time.sleep(5)
-# driver.quit()
+driver.quit()
